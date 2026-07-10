@@ -31,6 +31,52 @@
 
 ---
 
+## Quick Start
+
+### Option 1: Download (recommended)
+
+1. Grab the latest **`Bugu-x.y.z.dmg`** from [Releases](https://github.com/LearnPrompt/bugu/releases).
+2. Open the DMG and drag **Bugu** into **Applications**.
+
+> Requires **macOS 14+**.
+
+### Option 2: Build from source
+
+```bash
+git clone https://github.com/LearnPrompt/bugu.git
+cd bugu
+./script/build_and_run.sh
+```
+
+Run the unit tests (XCTest ships with Xcode, not the bare command-line tools):
+
+```bash
+./script/test.sh
+```
+
+> Requires **macOS 14+** and the Xcode command-line tools (Swift 5.10+).
+
+### First Launch
+
+If the first launch says **"Bugu" is damaged and can't be opened. You should move it to the Trash** — the app isn't actually damaged. This is macOS Gatekeeper blocking an unsigned app.
+
+- **Option A**: In Finder, right-click (Control-click) **Bugu.app → Open**, then confirm **Open** in the dialog.
+- **Option B**: Clear the quarantine flag from the terminal (adjust the path to where you installed it):
+
+```bash
+xattr -cr /Applications/Bugu.app
+```
+
+If macOS still blocks it, open **System Settings → Privacy & Security** and choose **Open Anyway**.
+
+### Turn on the basics
+
+1. Open the menu-bar bird icon.
+2. Toggle **Keep Mac awake** and **Watch coding agents**.
+3. Pick a **Sound pack** and **Alert volume**.
+4. Open **Manage agents…** to install hooks for the CLIs you use (one-click
+   *Enable all detected*). Hook edits are backed up and fully reversible.
+
 ## What is Bugu?
 
 When you hand a long task to a coding agent — Claude Code, Codex, Kimi, and friends —
@@ -87,48 +133,6 @@ Bugu **only ever activates an app that is already running** — it never spawns 
 stray terminal when it can't resolve the exact tab.
 
 </details>
-
-## Quick Start
-
-### Option 1: Download (recommended)
-
-1. Grab the latest **`Bugu-x.y.z.dmg`** from [Releases](https://github.com/LearnPrompt/bugu/releases).
-2. Open the DMG and drag **Bugu** into **Applications**.
-3. Because this community build isn't yet Apple-notarized, right-click
-   **Bugu.app → Open** the first time, then confirm **Open** in the dialog.
-
-> Requires **macOS 14+**.
-
-If macOS still blocks it, open **System Settings → Privacy & Security** and choose
-**Open Anyway**, or clear the quarantine flag after verifying the source:
-
-```bash
-xattr -dr com.apple.quarantine /Applications/Bugu.app
-```
-
-### Option 2: Build from source
-
-```bash
-git clone https://github.com/LearnPrompt/bugu.git
-cd bugu
-./script/build_and_run.sh
-```
-
-Run the unit tests (XCTest ships with Xcode, not the bare command-line tools):
-
-```bash
-./script/test.sh
-```
-
-> Requires **macOS 14+** and the Xcode command-line tools (Swift 5.10+).
-
-### Turn on the basics
-
-1. Open the menu-bar bird icon.
-2. Toggle **Keep Mac awake** and **Watch coding agents**.
-3. Pick a **Sound pack** and **Alert volume**.
-4. Open **Manage agents…** to install hooks for the CLIs you use (one-click
-   *Enable all detected*). Hook edits are backed up and fully reversible.
 
 ## How It Works
 
@@ -199,6 +203,6 @@ Bugu copies no code or audio from any of them — only ideas.
 
 [Luban · skill polishing](https://github.com/LearnPrompt/luban-skill) · [Paoding · blogger distillation](https://github.com/LearnPrompt/paoding-skill) · [Cailun · conversation→page](https://github.com/LearnPrompt/cailun-skill) · [Partner · pair coding](https://github.com/LearnPrompt/partner-skill) · [Loop Engineering](https://github.com/LearnPrompt/loop-engineering) · [Afu · LLM Todo](https://github.com/LearnPrompt/afu-llm-todo) · [AI News Radar](https://github.com/LearnPrompt/ai-news-radar) · [Skillrush Town](https://github.com/LearnPrompt/skillrush-town) · [Humanize PPT](https://github.com/LearnPrompt/humanize-ppt) · [CC Harness](https://github.com/LearnPrompt/cc-harness-skills)
 
-<sub>WeChat「卡尔的AI沃茨」 · [X @aiwarts](https://x.com/aiwarts) · [learnprompt.pro](https://www.learnprompt.pro)</sub>
+<sub>公众号「卡尔的AI沃茨」 · X @aiwarts · <a href="https://learnprompt.pro/workshop/">learnprompt.pro/workshop</a></sub>
 
 </div>

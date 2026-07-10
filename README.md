@@ -30,6 +30,52 @@
 
 ---
 
+## 快速开始
+
+### 方式一:下载(推荐)
+
+1. 从 [Releases](https://github.com/LearnPrompt/bugu/releases) 下载最新的 **`Bugu-x.y.z.dmg`**。
+2. 打开 DMG,把 **Bugu** 拖进 **应用程序(Applications)**。
+
+> 需要 **macOS 14+**。
+
+### 方式二:源码构建
+
+```bash
+git clone https://github.com/LearnPrompt/bugu.git
+cd bugu
+./script/build_and_run.sh
+```
+
+运行单元测试(XCTest 随 Xcode 提供,纯命令行工具没有):
+
+```bash
+./script/test.sh
+```
+
+> 需要 **macOS 14+** 和 Xcode 命令行工具(Swift 5.10+)。
+
+### 首次打开 / First Launch
+
+首次打开若提示**「"Bugu"已损坏,无法打开,你应该将它移到废纸篓」**——App 并没有真的损坏,这是 macOS Gatekeeper 对未签名应用的拦截。
+
+- **方案 A**:在 Finder 里右键(Control-点按)**Bugu.app → 打开**,再在弹窗里点**打开**。
+- **方案 B**:终端执行以下命令清除隔离标记(路径按你的实际安装位置调整):
+
+```bash
+xattr -cr /Applications/Bugu.app
+```
+
+如果 macOS 仍然拦截,打开**系统设置 → 隐私与安全性**,选择**仍要打开**。
+
+### 跑起来
+
+1. 点开菜单栏的布谷鸟图标。
+2. 打开 **Keep Mac awake** 和 **Watch coding agents**。
+3. 选择 **Sound pack** 和 **Alert volume**。
+4. 进入 **Manage agents…**,为你常用的 CLI 安装 hook(可一键 *Enable all detected*)。
+   所有配置改动都会先备份,可完全撤销。
+
 ## Bugu 是什么？
 
 当你把一个长任务丢给 coding agent——Claude Code、Codex、Kimi 等——你要么盯着终端，
@@ -73,47 +119,6 @@ Trae、Droid(Factory)、Qoder、Qwen、Kimi、Kimi Code、Mistral Vibe、CodeBud
 Bugu **只会激活已经在运行的应用**——当它无法定位到准确标签页时,绝不会凭空弹出一个空白终端。
 
 </details>
-
-## 快速开始
-
-### 方式一:下载(推荐)
-
-1. 从 [Releases](https://github.com/LearnPrompt/bugu/releases) 下载最新的 **`Bugu-x.y.z.dmg`**。
-2. 打开 DMG,把 **Bugu** 拖进 **应用程序(Applications)**。
-3. 由于当前社区版尚未做 Apple 公证,首次打开请**右键 Bugu.app → 打开**,再在弹窗里点**打开**。
-
-> 需要 **macOS 14+**。
-
-如果 macOS 仍然拦截,打开**系统设置 → 隐私与安全性**,选择**仍要打开**;
-或在确认来源后清除隔离标记:
-
-```bash
-xattr -dr com.apple.quarantine /Applications/Bugu.app
-```
-
-### 方式二:源码构建
-
-```bash
-git clone https://github.com/LearnPrompt/bugu.git
-cd bugu
-./script/build_and_run.sh
-```
-
-运行单元测试(XCTest 随 Xcode 提供,纯命令行工具没有):
-
-```bash
-./script/test.sh
-```
-
-> 需要 **macOS 14+** 和 Xcode 命令行工具(Swift 5.10+)。
-
-### 跑起来
-
-1. 点开菜单栏的布谷鸟图标。
-2. 打开 **Keep Mac awake** 和 **Watch coding agents**。
-3. 选择 **Sound pack** 和 **Alert volume**。
-4. 进入 **Manage agents…**,为你常用的 CLI 安装 hook(可一键 *Enable all detected*)。
-   所有配置改动都会先备份,可完全撤销。
 
 ## 工作原理
 
@@ -182,6 +187,6 @@ Bugu 不复制以上任何项目的代码或音频素材,只借鉴思路。
 
 [鲁班·Skill打磨](https://github.com/LearnPrompt/luban-skill) · [庖丁·博主蒸馏](https://github.com/LearnPrompt/paoding-skill) · [蔡伦·对话造纸](https://github.com/LearnPrompt/cailun-skill) · [搭子·结对开发](https://github.com/LearnPrompt/partner-skill) · [愚公·Loop工程](https://github.com/LearnPrompt/loop-engineering) · [阿福·LLM Todo](https://github.com/LearnPrompt/afu-llm-todo) · [AI雷达·零API资讯](https://github.com/LearnPrompt/ai-news-radar) · [淘金小镇·ClawHub日榜](https://github.com/LearnPrompt/skillrush-town) · [Humanize PPT·简报编排](https://github.com/LearnPrompt/humanize-ppt) · [CC Harness·六件套](https://github.com/LearnPrompt/cc-harness-skills)
 
-<sub>公众号「卡尔的AI沃茨」 · [X @aiwarts](https://x.com/aiwarts) · [learnprompt.pro](https://www.learnprompt.pro)</sub>
+<sub>公众号「卡尔的AI沃茨」 · X @aiwarts · <a href="https://learnprompt.pro/workshop/">learnprompt.pro/workshop</a></sub>
 
 </div>
