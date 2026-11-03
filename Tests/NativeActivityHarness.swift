@@ -14,6 +14,7 @@ struct NativeActivityHarness {
         try gemini(root: root, now: now)
         try openCode(root: root, now: now)
         try openCodeV2(root: root, now: now)
+        try openCodeWindow(root: root, now: now)
         print("NativeActivityHarness: all behavior checks passed")
     }
 
@@ -98,6 +99,18 @@ struct NativeActivityHarness {
         try sql(file, "INSERT INTO session_message VALUES('a2','s2',2,'assistant',\(ms+1000),'{\"finish\":\"stop\",\"time\":{\"completed\":\(ms+1000)}}'); UPDATE session_v2 SET time_updated=\(ms+1000);")
         try touch(file, at: now.addingTimeInterval(2))
         expect(monitor.scan(now: now.addingTimeInterval(3)).activeCount == 0, "OpenCode 2 stop releases hold")
+    }
+
+    private static func openCodeWindow(root: URL, now: Date) throws {
+        let home = root.appendingPathComponent("opencode-window")
+        let file = home.appendingPathComponent(".local/share/opencode/opencode.db")
+        try makeParent(file)
+        let ms = Int64(now.timeIntervalSince1970 * 1000)
+        try sql(file, "CREATE TABLE session(id TEXT PRIMARY KEY,directory TEXT,time_updated INTEGER); CREATE TABLE message(id TEXT PRIMARY KEY,session_id TEXT,time_created INTEGER,time_updated INTEGER,data TEXT); INSERT INTO session VALUES('s','/work/project',\(ms)); INSERT INTO message VALUES('a','s',\(ms),\(ms),'{\"role\":\"assistant\",\"finish\":\"continue\",\"time\":{\"completed\":\(ms)}}');")
+        let monitor = ActivityMonitor(home: home.path)
+        expect(monitor.scan(now: now).activeCount == 1, "OpenCode recent response holds wakefulness")
+        expect(monitor.scan(now: now.addingTimeInterval(4 * 60)).activeCount == 0, "OpenCode default window expires")
+        expect(monitor.scan(now: now.addingTimeInterval(4 * 60), window: .fiveMinutes).activeCount == 1, "OpenCode uses the selected window")
     }
 
     private static func sql(_ file: URL, _ command: String) throws {

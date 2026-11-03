@@ -20,7 +20,7 @@ final class OpenCodeActivityMonitor {
         path = home + "/.local/share/opencode/opencode.db"
     }
 
-    func scan(now: Date) -> [MonitoredSession] {
+    func scan(now: Date, window: RecentActivityWindow) -> [MonitoredSession] {
         guard let current = fileSignature() else {
             observations = []
             signature = nil
@@ -33,7 +33,7 @@ final class OpenCodeActivityMonitor {
         return observations.compactMap { item in
             let age = now.timeIntervalSince(item.at)
             guard age >= 0, age <= 4 * 60 * 60 else { return nil }
-            let active = !item.ended && (item.running || age <= 3 * 60)
+            let active = !item.ended && (item.running || age <= window.seconds)
             guard active || age <= 2 * 60 * 60 else { return nil }
             return MonitoredSession(
                 id: "opencode:" + item.id, agent: "OpenCode", project: item.project,

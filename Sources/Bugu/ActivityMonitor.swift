@@ -20,6 +20,21 @@ enum AwakePolicy {
     }
 }
 
+enum RecentActivityWindow: Int, CaseIterable, Identifiable {
+    case oneMinute = 1
+    case threeMinutes = 3
+    case fiveMinutes = 5
+    case tenMinutes = 10
+
+    var id: Int { rawValue }
+    var seconds: TimeInterval { TimeInterval(rawValue * 60) }
+    var title: String { "\(rawValue) 分钟" }
+
+    static func saved(in defaults: UserDefaults = .standard) -> Self {
+        Self(rawValue: defaults.integer(forKey: "recentActivityMinutes")) ?? .threeMinutes
+    }
+}
+
 /// Reads only local agent logs. No hooks, agent configuration edits, or network calls.
 // BeaconModel confines scans of each instance to one serial queue.
 final class ActivityMonitor: @unchecked Sendable {
@@ -43,13 +58,13 @@ final class ActivityMonitor: @unchecked Sendable {
         var completionAt: Date?
         var operations = Set<String>()
 
-        func isActive(at now: Date) -> Bool {
+        func isActive(at now: Date, window: RecentActivityWindow) -> Bool {
             let age = now.timeIntervalSince(lastEvent)
             if age < 0 { return false }
             if ended { return completionAt.map { now < $0 } ?? false }
             if (running || !operations.isEmpty) && age <= 4 * 60 * 60 { return true }
             if let lastToken, now.timeIntervalSince(lastToken) >= 0,
-               now.timeIntervalSince(lastToken) <= 3 * 60 { return true }
+               now.timeIntervalSince(lastToken) <= window.seconds { return true }
             return false
         }
     }
@@ -67,14 +82,14 @@ final class ActivityMonitor: @unchecked Sendable {
         iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     }
 
-    func scan(now: Date = Date()) -> ActivitySnapshot {
+    func scan(now: Date = Date(), window: RecentActivityWindow = .threeMinutes) -> ActivitySnapshot {
         for candidate in candidates(now: now) {
             readChanges(candidate, now: now)
         }
-        let openCodeSessions = openCode.scan(now: now)
+        let openCodeSessions = openCode.scan(now: now, window: window)
         states = states.filter { now.timeIntervalSince($0.value.lastEvent) < 24 * 60 * 60 }
         let sessions = states.values.compactMap { state -> MonitoredSession? in
-            let active = state.isActive(at: now)
+            let active = state.isActive(at: now, window: window)
             guard active || now.timeIntervalSince(state.lastEvent) < 2 * 60 * 60 else { return nil }
             let status: String
             if active { status = state.ended ? "收尾中" : state.running || !state.operations.isEmpty ? "执行中" : "近期有 token" }

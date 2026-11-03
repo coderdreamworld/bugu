@@ -39,7 +39,7 @@ struct MagpieActivityState {
 
     private var seen: [String: Seen] = [:]
 
-    mutating func update(_ data: Data?, now: Date) -> ActivitySnapshot {
+    mutating func update(_ data: Data?, now: Date, window: RecentActivityWindow = .threeMinutes) -> ActivitySnapshot {
         var live = Set<String>()
         if let data,
            let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
@@ -69,7 +69,7 @@ struct MagpieActivityState {
             }
         }
 
-        seen = seen.filter { now.timeIntervalSince($0.value.at) >= 0 && now.timeIntervalSince($0.value.at) <= 3 * 60 }
+        seen = seen.filter { now.timeIntervalSince($0.value.at) >= 0 && now.timeIntervalSince($0.value.at) <= window.seconds }
         let sessions = seen.map { key, item in
             let name = Self.name(item.agent)
             return MonitoredSession(

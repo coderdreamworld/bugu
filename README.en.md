@@ -2,11 +2,11 @@
 
 A macOS menu bar app that reads existing local coding-agent logs and prevents idle system sleep only while a task is active. The display can still turn off and lock normally.
 
-Monitoring is on by default. The separate manual wake switch keeps the system awake regardless of task state. Sound profile and volume remain available in the menu; set volume to 0% to disable task sounds.
+Monitoring is on by default. The Idle timeout menu offers 1, 3, 5, or 10 minutes (default 3) for recent activity without a clear running state. Explicit completion releases the sleep hold immediately; a known running task waits for its completion record. The separate manual wake switch keeps the system awake regardless of task state. Set sound volume to 0% to disable task sounds.
 
-Without Magpie, Bugu reads native session records from Codex, Claude Code, Gemini CLI, OpenCode, ZCode, and WorkBuddy. Magpie is optional: when its local gateway runs, Bugu also reads in-flight requests for other agents routed through it. A request gap is held for at most three minutes, or less when a native task completion is known. Bugu does not install hooks, change agent configuration, read source code, or upload conversations. An unsupported agent process alone never prevents sleep.
+Without Magpie, Bugu reads native session records from Codex, Claude Code, Gemini CLI, OpenCode, ZCode, and WorkBuddy. Magpie is optional: when its local gateway runs, Bugu also reads in-flight requests for other agents routed through it. A request gap follows the selected idle timeout, or ends sooner when a native task completion is known. Bugu does not install hooks, change agent configuration, read source code, or upload conversations. An unsupported agent process alone never prevents sleep.
 
-Bugu checks local records every five seconds and reads changed files or database rows only. An unfinished task, model request, or tool call remains active even without new tokens. Token-only evidence lasts three minutes. A state with no new event for four hours expires so a missing completion record cannot keep the Mac awake forever; use the manual switch for an exceptionally long task with no log output.
+Bugu checks local records every five seconds and reads changed files or database rows only. An unfinished task, model request, or tool call remains active even without new tokens. Token-only evidence lasts for the selected idle timeout. A state with no new event for four hours expires so a missing completion record cannot keep the Mac awake forever; use the manual switch for an exceptionally long task with no log output.
 
 ## Build and test
 

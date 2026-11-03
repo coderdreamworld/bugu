@@ -10,7 +10,7 @@ struct BuguApp: App {
     init() {
         if CommandLine.arguments.contains("--activity-snapshot") {
             let home = ProcessInfo.processInfo.environment["BUGU_LOG_HOME"] ?? NSHomeDirectory()
-            let snapshot = ActivityMonitor(home: home).scan()
+            let snapshot = ActivityMonitor(home: home).scan(window: .saved())
             print("active=\(snapshot.activeCount)")
             for session in snapshot.sessions {
                 print("\(session.agent)\t\(session.project)\t\(session.status)")
@@ -58,6 +58,21 @@ private struct BuguMenu: View {
             Toggle("自动监控任务", isOn: $model.monitoringEnabled)
             Toggle("手动保持唤醒", isOn: $model.manualAwake)
             Text("本地记录自动监控；Magpie 可选增强")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Text("空闲判定")
+                Spacer()
+                Picker("", selection: $model.recentActivityWindow) {
+                    ForEach(RecentActivityWindow.allCases) { window in
+                        Text(window.title).tag(window)
+                    }
+                }
+                .pickerStyle(.menu)
+                .frame(width: 100)
+            }
+            Text("仅近期活动适用；执行中的任务以结束记录为准")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
 
@@ -142,6 +157,12 @@ final class BeaconModel: ObservableObject {
     @Published var manualAwake = false {
         didSet { refreshAssertion() }
     }
+    @Published var recentActivityWindow: RecentActivityWindow {
+        didSet {
+            UserDefaults.standard.set(recentActivityWindow.rawValue, forKey: "recentActivityMinutes")
+            scheduleScan()
+        }
+    }
     @Published var alertVolume: Double {
         didSet { UserDefaults.standard.set(alertVolume, forKey: "alertVolume") }
     }
@@ -167,6 +188,7 @@ final class BeaconModel: ObservableObject {
     init() {
         let defaults = UserDefaults.standard
         monitoringEnabled = defaults.object(forKey: "passiveMonitoringEnabled") as? Bool ?? true
+        recentActivityWindow = .saved(in: defaults)
         let savedProfile = defaults.string(forKey: "soundProfile")
         alertVolume = savedProfile == "silent" ? 0 : (defaults.object(forKey: "alertVolume") as? Double ?? 0.65)
         soundProfile = BuguSoundProfile(rawValue: savedProfile ?? "") ?? .system
@@ -201,15 +223,16 @@ final class BeaconModel: ObservableObject {
         scanning = true
         let monitor = self.monitor
         let magpie = self.magpie
+        let window = recentActivityWindow
         scanQueue.async {
-            let local = monitor.scan()
+            let local = monitor.scan(window: window)
             Task { [weak self] in
                 let payload = await magpie.fetch()
                 await MainActor.run { [weak self] in
                     guard let self else { return }
                     self.scanning = false
                     let previous = self.snapshot.activeCount
-                    let routed = self.magpieState.update(payload, now: Date())
+                    let routed = self.magpieState.update(payload, now: Date(), window: window)
                     let result = ActivitySnapshot.merging(local, routed)
                     self.snapshot = self.monitoringEnabled ? result : ActivitySnapshot(sessions: [], activeCount: 0)
                     self.refreshAssertion()
