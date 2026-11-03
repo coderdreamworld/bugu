@@ -19,7 +19,7 @@ Bugu 每 5 秒检查一次目标记录，只读取变化的文件或数据库。
 ./script/build_and_run.sh build
 ```
 
-构建产物位于 `dist/Bugu.app`，已做本机 ad-hoc 签名。替换已安装版本时，退出旧应用后把它复制到 `/Applications/Bugu.app`。`Bugu --activity-snapshot` 只显示本机日志推断的任务状态，可用于诊断。`./script/test.sh` 会运行活动判定和旧 hook 清理测试；装有完整 Xcode 时也运行 XCTest。
+构建产物位于 `dist/Bugu.app`，已做本机 ad-hoc 签名。替换已安装版本时，退出旧应用后把它复制到 `/Applications/Bugu.app`。`Bugu --activity-snapshot` 只显示本机记录推断的任务状态，可用于诊断。`./script/test.sh` 会运行活动判定和旧 hook 清理测试。
 
 ## 边界
 

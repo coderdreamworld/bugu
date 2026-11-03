@@ -115,10 +115,6 @@ private struct BuguMenu: View {
             }
             .font(.caption)
 
-            if let update = model.availableUpdate {
-                Button("上游有新版 v\(update.version)") { model.openUpdatePage() }
-                    .font(.caption)
-            }
             if let message = model.lastEventMessage {
                 Text(message)
                     .font(.caption2)
@@ -126,15 +122,10 @@ private struct BuguMenu: View {
             }
 
             Divider()
-            HStack {
-                Button("检查上游更新") { model.checkForUpdates(announce: true) }
-                Spacer()
-                Button("退出布谷") {
-                    model.shutdown()
-                    NSApp.terminate(nil)
-                }
+            Button("退出布谷") {
+                model.shutdown()
+                NSApp.terminate(nil)
             }
-            .font(.caption)
         }
         .padding(16)
     }
@@ -164,7 +155,6 @@ final class BeaconModel: ObservableObject {
     }
     @Published private(set) var snapshot = ActivitySnapshot(sessions: [], activeCount: 0)
     @Published private(set) var lastEventMessage: String?
-    @Published var availableUpdate: UpdateChecker.Release?
 
     private let monitor: ActivityMonitor
     private let magpie: MagpieGatewayClient
@@ -189,7 +179,6 @@ final class BeaconModel: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.scheduleScan() }
         }
-        checkForUpdates()
     }
 
     var menuIconName: String { snapshot.activeCount > 0 && monitoringEnabled || manualAwake ? "bird.fill" : "bird" }
@@ -253,25 +242,6 @@ final class BeaconModel: ObservableObject {
 
     private func play(_ cue: BuguSoundEngine.Cue) {
         soundEngine.play(cue, volume: Float(alertVolume))
-    }
-
-    func checkForUpdates(announce: Bool = false) {
-        Task { [weak self] in
-            let latest = await UpdateChecker.fetchLatest()
-            guard let self else { return }
-            guard let latest else {
-                if announce { lastEventMessage = "无法检查更新" }
-                return
-            }
-            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
-            availableUpdate = UpdateChecker.isNewer(latest.version, than: version) ? latest : nil
-            if announce && availableUpdate == nil { lastEventMessage = "当前已是最新版本" }
-        }
-    }
-
-    func openUpdatePage() {
-        guard let url = URL(string: availableUpdate?.url ?? UpdateChecker.releasesPageURL) else { return }
-        NSWorkspace.shared.open(url)
     }
 
     func shutdown() {

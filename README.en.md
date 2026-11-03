@@ -17,6 +17,6 @@ Requires macOS 14+, Swift 5.10+, and Xcode Command Line Tools.
 ./script/build_and_run.sh build
 ```
 
-The signed local bundle is `dist/Bugu.app`. Quit the old app before copying it to `/Applications/Bugu.app`. `Bugu --activity-snapshot` prints the locally inferred task state. `./script/test.sh` runs the activity and legacy-hook cleanup checks, plus XCTest when full Xcode is available.
+The signed local bundle is `dist/Bugu.app`. Quit the old app before copying it to `/Applications/Bugu.app`. `Bugu --activity-snapshot` prints the locally inferred task state. `./script/test.sh` runs the activity and legacy-hook cleanup checks.
 
 [Upstream project](https://github.com/LearnPrompt/bugu) · [Requirements and acceptance (Chinese)](PRD-session-aware-bugu.md)
