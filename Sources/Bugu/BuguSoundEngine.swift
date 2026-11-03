@@ -4,6 +4,7 @@ import Foundation
 
 /// Selects which set of sounds the engine should play.
 enum BuguSoundProfile: String, CaseIterable, Identifiable {
+    case silent
     case system
     case bugu
     case custom
@@ -12,6 +13,7 @@ enum BuguSoundProfile: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
+        case .silent: return "静音"
         case .system: return "System"
         case .bugu: return "Bugu Pack"
         case .custom: return "Custom"
@@ -55,9 +57,11 @@ final class BuguSoundEngine {
     /// Plays the cue for the current profile at the requested volume.
     /// Volume is clamped to the same 0.2...1.0 range the UI enforces.
     func play(_ cue: Cue, volume: Float) {
+        guard currentProfile != .silent else { return }
         let clampedVolume = min(max(volume, 0.2), 1.0)
 
         switch currentProfile {
+        case .silent: return
         case .system:
             playSystemSound(cue, volume: clampedVolume)
         case .bugu:

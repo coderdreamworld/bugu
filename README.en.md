@@ -2,7 +2,7 @@
 
 A macOS menu bar app that reads existing local coding-agent logs and prevents idle system sleep only while a task is active. The display can still turn off and lock normally.
 
-Monitoring is on by default. The separate manual wake switch keeps the system awake regardless of task state. Sound profile and volume remain available in the menu.
+Monitoring is on by default. The separate manual wake switch keeps the system awake regardless of task state. Sound profile and volume remain available in the menu; select Silent to disable task sounds.
 
 This build reads Codex (`~/.codex/sessions`) and ZCode (`~/.zcode/cli/log`, `~/.zcode/cli/rollout`) logs. It does not install hooks, change agent configuration, read source code, or upload conversations. An unsupported agent process alone never prevents sleep.
 

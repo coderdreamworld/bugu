@@ -100,13 +100,15 @@ private struct BuguMenu: View {
                         .pickerStyle(.menu)
                         .frame(width: 115)
                     }
-                    HStack {
-                        Text("音量")
-                        Spacer()
-                        Text("\(Int(model.alertVolume * 100))%")
-                            .monospacedDigit()
+                    if model.soundProfile != .silent {
+                        HStack {
+                            Text("音量")
+                            Spacer()
+                            Text("\(Int(model.alertVolume * 100))%")
+                                .monospacedDigit()
+                        }
+                        Slider(value: $model.alertVolume, in: 0.2...1.0, step: 0.05)
                     }
-                    Slider(value: $model.alertVolume, in: 0.2...1.0, step: 0.05)
                 }
                 .font(.caption)
                 .padding(.top, 5)
