@@ -21,7 +21,8 @@ enum AwakePolicy {
 }
 
 /// Reads only local agent logs. No hooks, agent configuration edits, or network calls.
-final class ActivityMonitor {
+// BeaconModel confines scans of each instance to one serial queue.
+final class ActivityMonitor: @unchecked Sendable {
     private enum Source { case codex, zcodeLog, zcodeUsage }
     private struct Candidate { let path: String; let source: Source }
     private struct Cursor {
@@ -182,9 +183,12 @@ final class ActivityMonitor {
                 let info = payload["info"] as? [String: Any]
                 let total = info?["total_token_usage"] as? [String: Any]
                 if let count = (total?["total_tokens"] as? NSNumber)?.int64Value {
-                    update(id, agent: "Codex", time: time) { state in
-                        if state.totalTokens == nil || count > state.totalTokens! { state.lastToken = time }
-                        state.totalTokens = count
+                    let previous = states[id]?.totalTokens
+                    if previous.map({ count > $0 }) ?? true {
+                        update(id, agent: "Codex", time: time) { state in
+                            state.lastToken = time
+                            state.totalTokens = count
+                        }
                     }
                 }
             default: break

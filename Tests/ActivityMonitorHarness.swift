@@ -44,6 +44,23 @@ struct ActivityMonitorHarness {
 
         try append("not json", to: tokensOnly, mtime: now)
         expect(monitor.scan(now: now.addingTimeInterval(15 * 60)).activeCount == 0, "malformed log line cannot force wakefulness")
+
+        let partial = codexDir.appendingPathComponent("rollout-2026-11-03T20-20-00-dddddddd-dddd-4ddd-8ddd-dddddddddddd.jsonl")
+        try Data(codex("task_started", at: "2026-11-03T12:20:00Z").utf8).write(to: partial)
+        try FileManager.default.setAttributes([.modificationDate: now], ofItemAtPath: partial.path)
+        expect(monitor.scan(now: now.addingTimeInterval(20 * 60)).activeCount == 0, "incomplete JSONL record is not acted upon")
+        try append("", to: partial, mtime: now)
+        expect(monitor.scan(now: now.addingTimeInterval(20 * 60 + 1)).activeCount == 1, "completed JSONL record is processed")
+
+        try FileManager.default.removeItem(at: partial)
+        try append(codex("task_complete", at: "2026-11-03T12:21:00Z"), to: partial, mtime: now.addingTimeInterval(21 * 60))
+        expect(monitor.scan(now: now.addingTimeInterval(21 * 60 + 1)).activeCount == 0, "replacement log file is read after rotation")
+
+        let stale = codexDir.appendingPathComponent("rollout-2026-11-03T20-22-00-eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee.jsonl")
+        try append(codex("task_started", at: "2026-11-03T12:22:00Z"), to: stale, mtime: now.addingTimeInterval(22 * 60))
+        expect(monitor.scan(now: now.addingTimeInterval(22 * 60 + 1)).activeCount == 1, "unmatched start is initially active")
+        expect(monitor.scan(now: now.addingTimeInterval(5 * 60 * 60)).activeCount == 0, "unmatched start cannot prevent sleep indefinitely")
+
         expect(AwakePolicy.shouldStayAwake(monitoring: false, manual: false, activeCount: 1) == false, "disabled monitor ignores activity")
         expect(AwakePolicy.shouldStayAwake(monitoring: false, manual: true, activeCount: 0), "manual wakefulness is independent")
         print("ActivityMonitorHarness: all behavior checks passed")
