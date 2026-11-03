@@ -57,7 +57,7 @@ private struct BuguMenu: View {
 
             Toggle("自动监控任务", isOn: $model.monitoringEnabled)
             Toggle("手动保持唤醒", isOn: $model.manualAwake)
-            Text("只读本地日志；屏幕可照常熄灭和锁定")
+            Text("只读本地日志与 Magpie 本机状态；屏幕可照常熄灭")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
 
@@ -167,6 +167,8 @@ final class BeaconModel: ObservableObject {
     @Published var availableUpdate: UpdateChecker.Release?
 
     private let monitor: ActivityMonitor
+    private let magpie: MagpieGatewayClient
+    private var magpieState = MagpieActivityState()
     private let scanQueue = DispatchQueue(label: "com.learnprompt.Bugu.activity", qos: .utility)
     private let soundEngine = BuguSoundEngine()
     private var timer: Timer?
@@ -180,6 +182,7 @@ final class BeaconModel: ObservableObject {
         alertVolume = defaults.object(forKey: "alertVolume") as? Double ?? 0.65
         soundProfile = BuguSoundProfile(rawValue: defaults.string(forKey: "soundProfile") ?? "") ?? .system
         monitor = ActivityMonitor(home: ProcessInfo.processInfo.environment["BUGU_LOG_HOME"] ?? NSHomeDirectory())
+        magpie = MagpieGatewayClient(home: NSHomeDirectory())
         soundEngine.setProfile(soundProfile)
         scheduleScan()
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
@@ -204,19 +207,25 @@ final class BeaconModel: ObservableObject {
         guard monitoringEnabled && !scanning else { return }
         scanning = true
         let monitor = self.monitor
-        scanQueue.async { [weak self] in
-            let result = monitor.scan()
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                self.scanning = false
-                let previous = self.snapshot.activeCount
-                self.snapshot = self.monitoringEnabled ? result : ActivitySnapshot(sessions: [], activeCount: 0)
-                self.refreshAssertion()
-                if self.scannedOnce && self.monitoringEnabled {
-                    if previous == 0 && result.activeCount > 0 { self.play(.accepted) }
-                    if previous > 0 && result.activeCount == 0 { self.play(.completed) }
+        let magpie = self.magpie
+        scanQueue.async {
+            let local = monitor.scan()
+            Task { [weak self] in
+                let payload = await magpie.fetch()
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    self.scanning = false
+                    let previous = self.snapshot.activeCount
+                    let routed = self.magpieState.update(payload, now: Date())
+                    let result = ActivitySnapshot.merging(local, routed)
+                    self.snapshot = self.monitoringEnabled ? result : ActivitySnapshot(sessions: [], activeCount: 0)
+                    self.refreshAssertion()
+                    if self.scannedOnce && self.monitoringEnabled {
+                        if previous == 0 && result.activeCount > 0 { self.play(.accepted) }
+                        if previous > 0 && result.activeCount == 0 { self.play(.completed) }
+                    }
+                    self.scannedOnce = true
                 }
-                self.scannedOnce = true
             }
         }
     }

@@ -7,6 +7,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 "$ROOT_DIR/script/test_activity.sh"
+"$ROOT_DIR/script/test_magpie.sh"
 python3 -m unittest discover -s Tests -p 'test_legacy_hooks.py' -q
 
 if ! xcrun --find xctest >/dev/null 2>&1; then
