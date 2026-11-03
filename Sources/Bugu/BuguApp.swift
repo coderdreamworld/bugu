@@ -57,7 +57,7 @@ private struct BuguMenu: View {
 
             Toggle("自动监控任务", isOn: $model.monitoringEnabled)
             Toggle("手动保持唤醒", isOn: $model.manualAwake)
-            Text("只读本地日志与 Magpie 本机状态；屏幕可照常熄灭")
+            Text("本地记录自动监控；Magpie 可选增强")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
 
@@ -181,8 +181,9 @@ final class BeaconModel: ObservableObject {
         monitoringEnabled = defaults.object(forKey: "passiveMonitoringEnabled") as? Bool ?? true
         alertVolume = defaults.object(forKey: "alertVolume") as? Double ?? 0.65
         soundProfile = BuguSoundProfile(rawValue: defaults.string(forKey: "soundProfile") ?? "") ?? .system
-        monitor = ActivityMonitor(home: ProcessInfo.processInfo.environment["BUGU_LOG_HOME"] ?? NSHomeDirectory())
-        magpie = MagpieGatewayClient(home: NSHomeDirectory())
+        let sourceHome = ProcessInfo.processInfo.environment["BUGU_LOG_HOME"] ?? NSHomeDirectory()
+        monitor = ActivityMonitor(home: sourceHome)
+        magpie = MagpieGatewayClient(home: sourceHome)
         soundEngine.setProfile(soundProfile)
         scheduleScan()
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in

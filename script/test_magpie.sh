@@ -7,6 +7,7 @@ trap 'rm -f "$TEST_BINARY"' EXIT
 
 swiftc -parse-as-library \
   "$ROOT_DIR/Sources/Bugu/ActivityMonitor.swift" \
+  "$ROOT_DIR/Sources/Bugu/OpenCodeActivity.swift" \
   "$ROOT_DIR/Sources/Bugu/MagpieActivity.swift" \
   "$ROOT_DIR/Tests/MagpieActivityHarness.swift" \
   -o "$TEST_BINARY"

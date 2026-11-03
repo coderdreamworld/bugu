@@ -5,6 +5,7 @@ struct MagpieGatewayClient: Sendable {
     let home: String
 
     func fetch() async -> Data? {
+        guard FileManager.default.fileExists(atPath: home + "/.config/magpie") else { return nil }
         let port = Self.port(home: home)
         guard let url = URL(string: "http://127.0.0.1:\(port)/v1/magpie/concurrency") else { return nil }
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 1)
@@ -105,7 +106,7 @@ extension ActivitySnapshot {
             let agent = String(parts[0]).lowercased()
             let session = String(parts[1])
             return !local.sessions.contains { native in
-                native.agent.lowercased() == agent && native.id.contains(session)
+                Self.agentKey(native.agent) == agent && native.id.contains(session)
                     && (native.isActive || route.status == "近期请求")
             }
         }
@@ -113,5 +114,13 @@ extension ActivitySnapshot {
             sessions: Array((local.sessions + routed).sorted { $0.lastActivity > $1.lastActivity }.prefix(12)),
             activeCount: local.activeCount + routed.count
         )
+    }
+
+    private static func agentKey(_ name: String) -> String {
+        switch name {
+        case "Claude Code": return "claude"
+        case "Gemini CLI": return "gemini"
+        default: return name.lowercased()
+        }
     }
 }

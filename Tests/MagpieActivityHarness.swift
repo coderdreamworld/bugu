@@ -2,7 +2,7 @@ import Foundation
 
 @main
 struct MagpieActivityHarness {
-    static func main() throws {
+    static func main() async throws {
         let now = Date(timeIntervalSince1970: 1_793_770_000)
         var state = MagpieActivityState()
         expect(state.update(nil, now: now).activeCount == 0, "missing Magpie is idle")
@@ -17,7 +17,15 @@ struct MagpieActivityHarness {
             id: "codex:rollout-2026-11-04T12-00-00-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
             agent: "Codex", project: "project", lastActivity: now, status: "执行中", isActive: true
         )], activeCount: 1)
+        expect(ActivitySnapshot.merging(native, ActivitySnapshot(sessions: [], activeCount: 0)).activeCount == 1, "native monitoring works without Magpie")
         expect(ActivitySnapshot.merging(native, first).activeCount == 1, "native and Magpie view of one session count once")
+        let claudeRequest = Data(#"{"object":"concurrency","requests":1,"tools":0,"active":[{"id":3,"agent":"claude","session":"claude-session"}]}"#.utf8)
+        var claudeState = MagpieActivityState()
+        let claudeNative = ActivitySnapshot(sessions: [MonitoredSession(
+            id: "claude:claude-session", agent: "Claude Code", project: "project",
+            lastActivity: now, status: "执行中", isActive: true
+        )], activeCount: 1)
+        expect(ActivitySnapshot.merging(claudeNative, claudeState.update(claudeRequest, now: now)).activeCount == 1, "Claude source names deduplicate")
 
         let idle = Data(#"{"object":"concurrency","requests":0,"tools":0,"active":[]}"#.utf8)
         let grace = state.update(idle, now: now.addingTimeInterval(10))
@@ -37,6 +45,8 @@ struct MagpieActivityHarness {
         expect(state.update(Data("not json".utf8), now: now.addingTimeInterval(181)).activeCount == 0, "bad response cannot hold awake indefinitely")
 
         let home = FileManager.default.temporaryDirectory.appendingPathComponent("bugu-magpie-tests-\(UUID().uuidString)")
+        let absent = await MagpieGatewayClient(home: home.path).fetch()
+        expect(absent == nil, "no Magpie install needs no network or setup")
         try FileManager.default.createDirectory(at: home.appendingPathComponent(".config/magpie"), withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: home) }
         expect(MagpieGatewayClient.port(home: home.path) == 3425, "default gateway port")
