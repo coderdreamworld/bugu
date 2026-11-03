@@ -2,7 +2,7 @@
 
 A macOS menu bar app that reads existing local coding-agent logs and prevents idle system sleep only while a task is active. The display can still turn off and lock normally.
 
-Monitoring is on by default. The separate manual wake switch keeps the system awake regardless of task state. Sound profile and volume remain available in the menu; select Silent to disable task sounds.
+Monitoring is on by default. The separate manual wake switch keeps the system awake regardless of task state. Sound profile and volume remain available in the menu; set volume to 0% to disable task sounds.
 
 Without Magpie, Bugu reads native session records from Codex, Claude Code, Gemini CLI, OpenCode, ZCode, and WorkBuddy. Magpie is optional: when its local gateway runs, Bugu also reads in-flight requests for other agents routed through it. A request gap is held for at most three minutes, or less when a native task completion is known. Bugu does not install hooks, change agent configuration, read source code, or upload conversations. An unsupported agent process alone never prevents sleep.
 

@@ -100,15 +100,13 @@ private struct BuguMenu: View {
                         .pickerStyle(.menu)
                         .frame(width: 115)
                     }
-                    if model.soundProfile != .silent {
-                        HStack {
-                            Text("音量")
-                            Spacer()
-                            Text("\(Int(model.alertVolume * 100))%")
-                                .monospacedDigit()
-                        }
-                        Slider(value: $model.alertVolume, in: 0.2...1.0, step: 0.05)
+                    HStack {
+                        Text("音量")
+                        Spacer()
+                        Text("\(Int(model.alertVolume * 100))%")
+                            .monospacedDigit()
                     }
+                    Slider(value: $model.alertVolume, in: 0...1.0, step: 0.05)
                 }
                 .font(.caption)
                 .padding(.top, 5)
@@ -169,8 +167,13 @@ final class BeaconModel: ObservableObject {
     init() {
         let defaults = UserDefaults.standard
         monitoringEnabled = defaults.object(forKey: "passiveMonitoringEnabled") as? Bool ?? true
-        alertVolume = defaults.object(forKey: "alertVolume") as? Double ?? 0.65
-        soundProfile = BuguSoundProfile(rawValue: defaults.string(forKey: "soundProfile") ?? "") ?? .system
+        let savedProfile = defaults.string(forKey: "soundProfile")
+        alertVolume = savedProfile == "silent" ? 0 : (defaults.object(forKey: "alertVolume") as? Double ?? 0.65)
+        soundProfile = BuguSoundProfile(rawValue: savedProfile ?? "") ?? .system
+        if savedProfile == "silent" {
+            defaults.set(0.0, forKey: "alertVolume")
+            defaults.set(BuguSoundProfile.system.rawValue, forKey: "soundProfile")
+        }
         let sourceHome = ProcessInfo.processInfo.environment["BUGU_LOG_HOME"] ?? NSHomeDirectory()
         monitor = ActivityMonitor(home: sourceHome)
         magpie = MagpieGatewayClient(home: sourceHome)
