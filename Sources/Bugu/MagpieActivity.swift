@@ -39,7 +39,7 @@ struct MagpieActivityState {
 
     private var seen: [String: Seen] = [:]
 
-    mutating func update(_ data: Data?, now: Date, window: RecentActivityWindow = .threeMinutes) -> ActivitySnapshot {
+    mutating func update(_ data: Data?, now: Date, window: RecentActivityWindow = .standard) -> ActivitySnapshot {
         var live = Set<String>()
         if let data,
            let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],

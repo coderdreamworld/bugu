@@ -20,18 +20,25 @@ enum AwakePolicy {
     }
 }
 
-enum RecentActivityWindow: Int, CaseIterable, Identifiable {
-    case oneMinute = 1
-    case threeMinutes = 3
-    case fiveMinutes = 5
-    case tenMinutes = 10
+struct RecentActivityWindow: Equatable {
+    static let standard = RecentActivityWindow(minutes: 3)!
+    static let allowedMinutes = 1...240
 
-    var id: Int { rawValue }
-    var seconds: TimeInterval { TimeInterval(rawValue * 60) }
-    var title: String { "\(rawValue) 分钟" }
+    let minutes: Int
+    var seconds: TimeInterval { TimeInterval(minutes * 60) }
+
+    init?(minutes: Int) {
+        guard Self.allowedMinutes.contains(minutes) else { return nil }
+        self.minutes = minutes
+    }
+
+    static func parse(_ text: String) -> Self? {
+        guard let minutes = Int(text.trimmingCharacters(in: .whitespacesAndNewlines)) else { return nil }
+        return Self(minutes: minutes)
+    }
 
     static func saved(in defaults: UserDefaults = .standard) -> Self {
-        Self(rawValue: defaults.integer(forKey: "recentActivityMinutes")) ?? .threeMinutes
+        Self(minutes: defaults.integer(forKey: "recentActivityMinutes")) ?? .standard
     }
 }
 
@@ -82,7 +89,7 @@ final class ActivityMonitor: @unchecked Sendable {
         iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     }
 
-    func scan(now: Date = Date(), window: RecentActivityWindow = .threeMinutes) -> ActivitySnapshot {
+    func scan(now: Date = Date(), window: RecentActivityWindow = .standard) -> ActivitySnapshot {
         for candidate in candidates(now: now) {
             readChanges(candidate, now: now)
         }

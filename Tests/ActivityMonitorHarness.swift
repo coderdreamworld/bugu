@@ -13,11 +13,18 @@ struct ActivityMonitorHarness {
         let suiteName = "bugu-activity-tests-\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
-        expect(RecentActivityWindow.saved(in: defaults) == .threeMinutes, "three minutes is the default window")
-        defaults.set(5, forKey: "recentActivityMinutes")
-        expect(RecentActivityWindow.saved(in: defaults) == .fiveMinutes, "selected window persists")
-        defaults.set(2, forKey: "recentActivityMinutes")
-        expect(RecentActivityWindow.saved(in: defaults) == .threeMinutes, "invalid window falls back safely")
+        expect(RecentActivityWindow.saved(in: defaults) == .standard, "three minutes is the default window")
+        defaults.set(30, forKey: "recentActivityMinutes")
+        expect(RecentActivityWindow.saved(in: defaults) == RecentActivityWindow(minutes: 30), "arbitrary minutes persist")
+        defaults.set(0, forKey: "recentActivityMinutes")
+        expect(RecentActivityWindow.saved(in: defaults) == .standard, "zero falls back safely")
+        defaults.set(241, forKey: "recentActivityMinutes")
+        expect(RecentActivityWindow.saved(in: defaults) == .standard, "out-of-range value falls back safely")
+        expect(RecentActivityWindow(minutes: 1) != nil && RecentActivityWindow(minutes: 240) != nil, "range endpoints are accepted")
+        expect(RecentActivityWindow.parse(" 30 ") == RecentActivityWindow(minutes: 30), "minute input accepts surrounding spaces")
+        expect(RecentActivityWindow.parse("") == nil && RecentActivityWindow.parse("abc") == nil, "empty and nonnumeric input is rejected")
+        expect(RecentActivityWindow.parse("0") == nil && RecentActivityWindow.parse("241") == nil, "out-of-range input is rejected")
+        expect(RecentActivityWindow.parse("30.5") == nil, "fractional minutes are rejected")
 
         let codexDir = root.appendingPathComponent(".codex/sessions/2026/11/03")
         try FileManager.default.createDirectory(at: codexDir, withIntermediateDirectories: true)
@@ -48,8 +55,8 @@ struct ActivityMonitorHarness {
         let tokensOnly = codexDir.appendingPathComponent("rollout-2026-11-03T20-10-00-cccccccc-cccc-4ccc-8ccc-cccccccccccc.jsonl")
         try append(#"{"timestamp":"2026-11-03T12:10:00Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"total_tokens":100}}}}"#, to: tokensOnly, mtime: now)
         expect(monitor.scan(now: now.addingTimeInterval(10 * 60)).activeCount == 1, "token growth proves recent activity")
-        expect(monitor.scan(now: now.addingTimeInterval(14 * 60), window: .oneMinute).activeCount == 0, "short window ends token-only activity")
-        expect(monitor.scan(now: now.addingTimeInterval(14 * 60), window: .fiveMinutes).activeCount == 1, "longer window preserves token-only activity")
+        expect(monitor.scan(now: now.addingTimeInterval(14 * 60), window: RecentActivityWindow(minutes: 1)!).activeCount == 0, "short window ends token-only activity")
+        expect(monitor.scan(now: now.addingTimeInterval(14 * 60), window: RecentActivityWindow(minutes: 30)!).activeCount == 1, "custom window preserves token-only activity")
         expect(monitor.scan(now: now.addingTimeInterval(14 * 60)).activeCount == 0, "token-only evidence expires")
 
         try append("not json", to: tokensOnly, mtime: now)

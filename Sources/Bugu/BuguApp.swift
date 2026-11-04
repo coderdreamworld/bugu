@@ -36,6 +36,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 private struct BuguMenu: View {
     @ObservedObject var model: BeaconModel
+    @State private var idleMinutesInput = ""
+    @State private var idleMinutesInvalid = false
+    @FocusState private var idleMinutesFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -64,17 +67,25 @@ private struct BuguMenu: View {
             HStack {
                 Text("空闲判定")
                 Spacer()
-                Picker("", selection: $model.recentActivityWindow) {
-                    ForEach(RecentActivityWindow.allCases) { window in
-                        Text(window.title).tag(window)
+                TextField("分钟", text: $idleMinutesInput)
+                    .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 64)
+                    .focused($idleMinutesFocused)
+                    .onSubmit(saveIdleMinutes)
+                    .onChange(of: idleMinutesFocused) { _, focused in
+                        if !focused { saveIdleMinutes() }
                     }
-                }
-                .pickerStyle(.menu)
-                .frame(width: 100)
+                    .onChange(of: idleMinutesInput) { _, _ in idleMinutesInvalid = false }
+                Text("分钟")
             }
-            Text("仅近期活动适用；执行中的任务以结束记录为准")
+            .onAppear {
+                idleMinutesInput = String(model.recentActivityWindow.minutes)
+                idleMinutesInvalid = false
+            }
+            Text(idleMinutesInvalid ? "请输入 1–240 分钟" : "1–240 分钟；仅近期活动适用")
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(idleMinutesInvalid ? .red : .secondary)
 
             if model.monitoringEnabled && model.snapshot.activeCount > 0 {
                 Divider()
@@ -142,6 +153,16 @@ private struct BuguMenu: View {
         }
         .padding(16)
     }
+
+    private func saveIdleMinutes() {
+        guard let window = RecentActivityWindow.parse(idleMinutesInput) else {
+            idleMinutesInvalid = true
+            return
+        }
+        if model.recentActivityWindow != window { model.recentActivityWindow = window }
+        idleMinutesInput = String(window.minutes)
+        idleMinutesInvalid = false
+    }
 }
 
 @MainActor
@@ -159,7 +180,7 @@ final class BeaconModel: ObservableObject {
     }
     @Published var recentActivityWindow: RecentActivityWindow {
         didSet {
-            UserDefaults.standard.set(recentActivityWindow.rawValue, forKey: "recentActivityMinutes")
+            UserDefaults.standard.set(recentActivityWindow.minutes, forKey: "recentActivityMinutes")
             scheduleScan()
         }
     }

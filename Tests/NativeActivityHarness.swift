@@ -110,7 +110,7 @@ struct NativeActivityHarness {
         let monitor = ActivityMonitor(home: home.path)
         expect(monitor.scan(now: now).activeCount == 1, "OpenCode recent response holds wakefulness")
         expect(monitor.scan(now: now.addingTimeInterval(4 * 60)).activeCount == 0, "OpenCode default window expires")
-        expect(monitor.scan(now: now.addingTimeInterval(4 * 60), window: .fiveMinutes).activeCount == 1, "OpenCode uses the selected window")
+        expect(monitor.scan(now: now.addingTimeInterval(4 * 60), window: RecentActivityWindow(minutes: 30)!).activeCount == 1, "OpenCode uses custom minutes")
     }
 
     private static func sql(_ file: URL, _ command: String) throws {

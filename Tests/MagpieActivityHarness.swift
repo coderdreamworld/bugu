@@ -39,12 +39,12 @@ struct MagpieActivityHarness {
 
         var shortWindow = MagpieActivityState()
         _ = shortWindow.update(active, now: now)
-        expect(shortWindow.update(idle, now: now.addingTimeInterval(59), window: .oneMinute).activeCount == 1, "short Magpie window holds briefly")
-        expect(shortWindow.update(idle, now: now.addingTimeInterval(61), window: .oneMinute).activeCount == 0, "short Magpie window expires")
+        expect(shortWindow.update(idle, now: now.addingTimeInterval(59), window: RecentActivityWindow(minutes: 1)!).activeCount == 1, "short Magpie window holds briefly")
+        expect(shortWindow.update(idle, now: now.addingTimeInterval(61), window: RecentActivityWindow(minutes: 1)!).activeCount == 0, "short Magpie window expires")
         var longWindow = MagpieActivityState()
         _ = longWindow.update(active, now: now)
-        expect(longWindow.update(idle, now: now.addingTimeInterval(181), window: .fiveMinutes).activeCount == 1, "long Magpie window holds requests")
-        expect(longWindow.update(idle, now: now.addingTimeInterval(301), window: .fiveMinutes).activeCount == 0, "long Magpie window expires")
+        expect(longWindow.update(idle, now: now.addingTimeInterval(29 * 60), window: RecentActivityWindow(minutes: 30)!).activeCount == 1, "custom Magpie window holds requests")
+        expect(longWindow.update(idle, now: now.addingTimeInterval(30 * 60 + 1), window: RecentActivityWindow(minutes: 30)!).activeCount == 0, "custom Magpie window expires")
 
         let tools = Data(#"{"object":"concurrency","requests":0,"tools":1,"active":[]}"#.utf8)
         expect(state.update(tools, now: now).sessions.first?.status == "等待工具", "Claude bridge tool wait is active")
